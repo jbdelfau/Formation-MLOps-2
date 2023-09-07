@@ -12,4 +12,7 @@ def health():
 
 @app.route('/predict')
 def predict_endpoint():
+
+    prepare_features(data, False)
+
     raise NotImplementedError
