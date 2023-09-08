@@ -1,6 +1,7 @@
 import os
-
+import numpy as np
 import pandas as pd
+import datetime
 from sqlalchemy import create_engine
 
 
@@ -20,7 +21,8 @@ def monitor_with_io(predictions_folder: str, db_con_str: str, monitoring_table_n
 
 
 def monitor(latest_predictions: pd.DataFrame) -> pd.DataFrame:
-    # Start filling function
-    monitoring_df = pd.DataFrame
-    # End filling function
+
+    now = datetime.datetime.now()
+    monitoring_df = pd.DataFrame({"prediction_time ": now, 
+    "mean_value": np.mean(latest_predictions)})
     return monitoring_df
