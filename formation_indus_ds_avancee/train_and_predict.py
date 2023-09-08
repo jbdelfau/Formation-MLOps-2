@@ -5,12 +5,16 @@ import joblib
 import mlflow
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+from xgboost import XGBRegressor
 
 
-def train_model_with_io(features_path: str, model_registry_folder: str) -> None:
+def train_model_with_io(features_path: str, model_registry_folder: str, model_type: str) -> None:
     features = pd.read_parquet(features_path)
-
-    train_model(features, model_registry_folder)
+    if model_type == "random_forest":
+        train_model(features, model_registry_folder)
+    elif model_type == "xgboost":
+        train_xgboost(features, model_registry_folder)
 
 
 def train_model(features: pd.DataFrame, model_registry_folder: str) -> None:
@@ -22,7 +26,19 @@ def train_model(features: pd.DataFrame, model_registry_folder: str) -> None:
         model = RandomForestRegressor(n_estimators=1, max_depth=10, n_jobs=1)
         model.fit(X, y)
     time_str = time.strftime('%Y%m%d-%H%M%S')
-    joblib.dump(model, os.path.join(model_registry_folder, time_str + '.joblib'))
+    joblib.dump(model, os.path.join(model_registry_folder, "random_forest" + time_str + '.joblib'))
+
+
+def train_xgboost(features: pd.DataFrame, model_registry_folder: str) -> None:
+    target = 'Ba_avg'
+    X = features.drop(columns=[target])
+    y = features[target]
+    with mlflow.start_run():
+        mlflow.xgboost.autolog(log_models=True)
+        model = XGBRegressor(n_estimators=10, max_depth=10, n_jobs=1, eval_metric=r2_score)
+        model.fit(X, y, eval_set=[(X, y)])
+    time_str = time.strftime('%Y%m%d-%H%M%S')
+    joblib.dump(model, os.path.join(model_registry_folder, "xgboost" + time_str + '.joblib'))
 
 
 def predict_with_io(features_path: str, model_path: str, predictions_folder: str) -> None:
